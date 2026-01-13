@@ -3,6 +3,7 @@ require("dotenv").config();
 const express = require("express");
 const session = require("express-session");
 const cors = require("cors");
+const path = require("path")
 
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/user");
@@ -37,7 +38,7 @@ app.use(session({
 
   cookie: {
 
-    secure: false,
+    secure: true,
 
     httpOnly: true,
 
@@ -50,6 +51,7 @@ app.use(session({
 /* =========================
    ROUTES
 ========================= */
+app.use(express.static(path.join(__dirname, "public")));
 app.use("/auth", authRoutes);
 app.use("/user", userRoutes);
 
@@ -57,14 +59,14 @@ app.use("/user", userRoutes);
    TEST ROUTE
 ========================= */
 app.get("/", (req, res) => {
-  res.send("Backend is running ✅");
+  res.send(path.join(__dirname, "public", "index.html"));
 });
 
 /* =========================
    START SERVER (PTERODACTYL)
 ========================= */
-const PORT = process.env.PORT || 21409;
+const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Backend running on port ${PORT}`);
+app.listen(PORT, () => {
+  console.log("Server running on port " + PORT);
 });
