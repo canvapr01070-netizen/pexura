@@ -1,5 +1,5 @@
 // 🔗 Backend base URL (بدّلها إلا تبدّل السيرفر)
-const BACKEND_URL = "http://prem-eu2.bot-hosting.net:21409";
+const BACKEND_URL = "https://pexura.onrender.com";
 
 // 🔐 Check if user already logged in
 fetch(`${BACKEND_URL}/user/me`, {
