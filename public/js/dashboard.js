@@ -1,4 +1,4 @@
-const BACKEND_URL = "http://prem-eu2.bot-hosting.net:21409";
+const BACKEND_URL = "https://pexura.onrender.com";
 
 // Get user info
 fetch(`${BACKEND_URL}/user/me`, {
