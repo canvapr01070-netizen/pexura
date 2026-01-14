@@ -1,38 +1,34 @@
-document.addEventListener("DOMContentLoaded", () => {
-  // Get user info from backend
-  fetch("/user/me", {
-    method: "GET",
-    credentials: "include",
-  })
-    .then((res) => {
-      if (!res.ok) {
-        // Not logged in
-        window.location.href = "/";
-        return;
-      }
-      return res.json();
-    })
-    .then((user) => {
-      if (!user) return;
+const BACKEND_URL = "https://pexura.onrender.com";
 
-      // Fill user info
-      const usernameEl = document.getElementById("username");
-      const userIdEl = document.getElementById("userid");
-      const avatarEl = document.getElementById("avatar");
-
-      if (usernameEl) usernameEl.textContent = user.username;
-      if (userIdEl) userIdEl.textContent = user.id;
-      if (avatarEl) avatarEl.src = user.avatar;
-    })
-    .catch(() => {
+// تحميل user
+fetch(`${BACKEND_URL}/user/me`, {
+  credentials: "include"
+})
+  .then(res => {
+    if (!res.ok) {
       window.location.href = "/";
-    });
+      return;
+    }
+    return res.json();
+  })
+  .then(user => {
+    if (!user) return;
 
-  // Logout button
-  const logoutBtn = document.getElementById("logoutBtn");
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", () => {
-      window.location.href = "/logout";
-    });
-  }
+    document.getElementById("username").innerText = user.username;
+    document.getElementById("userid").innerText = user.id;
+
+    if (user.avatar) {
+      document.getElementById("avatar").src =
+        `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`;
+    }
+  });
+
+// LOGOUT
+document.getElementById("logoutBtn").addEventListener("click", () => {
+  fetch(`${BACKEND_URL}/auth/logout`, {
+    method: "POST",
+    credentials: "include"
+  }).then(() => {
+    window.location.href = "/";
+  });
 });
