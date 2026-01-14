@@ -14,7 +14,7 @@ const app = express();
    CORS CONFIG (IMPORTANT)
 ========================= */
 app.use(cors({
-  origin: "http://127.0.0.1:5500",
+  origin: "https://pexura.onrender.com",
   credentials: true
 }));
 
