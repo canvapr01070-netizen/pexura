@@ -20,20 +20,23 @@ app.use(
 app.use(express.json());
 
 /* SESSION */
+app.set("trust proxy", 1); // 🔴 ضروري ف Render
+
 app.use(
   session({
     name: "eco.sid",
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
+    proxy: true,
     cookie: {
       httpOnly: true,
-      secure: true, // Render = https
-      sameSite: "none",
-    },
+      secure: true,      // Render = HTTPS
+      sameSite: "none",  // cross-site
+      maxAge: 1000 * 60 * 60 * 24 // 1 day
+    }
   })
 );
-
 /* STATIC FRONTEND */
 app.use(express.static(path.join(__dirname, "public")));
 
