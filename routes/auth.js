@@ -1,68 +1,81 @@
 const router = require("express").Router();
 const axios = require("axios");
+const fs = require("fs");
+const path = require("path");
 
-// STEP 1: Redirect user to Discord
+const USERS_FILE = path.join(__dirname, "../users.json");
+
+/* LOGIN */
 router.get("/discord", (req, res) => {
   const url =
     "https://discord.com/api/oauth2/authorize" +
     `?client_id=${process.env.CLIENT_ID}` +
     `&redirect_uri=${encodeURIComponent(process.env.REDIRECT_URI)}` +
-    "&response_type=code" +
-    "&scope=identify";
+    "&response_type=code&scope=identify";
 
   res.redirect(url);
 });
 
-// STEP 2: Callback from Discord
+/* CALLBACK */
 router.get("/discord/callback", async (req, res) => {
-  try {
-    const code = req.query.code;
-    if (!code) return res.send("No code provided");
+  const code = req.query.code;
+  if (!code) return res.redirect("/");
 
-    // 🔑 Exchange code for access token
+  try {
+    /* TOKEN */
     const tokenRes = await axios.post(
       "https://discord.com/api/oauth2/token",
       new URLSearchParams({
         client_id: process.env.CLIENT_ID,
         client_secret: process.env.CLIENT_SECRET,
         grant_type: "authorization_code",
-        code: code,
-        redirect_uri: process.env.REDIRECT_URI
-      }).toString(),
-      {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
-        }
-      }
+        code,
+        redirect_uri: process.env.REDIRECT_URI,
+      }),
+      { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
     );
 
     const accessToken = tokenRes.data.access_token;
 
-    // 👤 Get user info
+    /* USER INFO */
     const userRes = await axios.get(
       "https://discord.com/api/users/@me",
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
-      }
+      { headers: { Authorization: `Bearer ${accessToken}` } }
     );
 
-    // 💾 Save user in session
+    const user = userRes.data;
+
+    /* SAVE SESSION */
     req.session.user = {
-      id: userRes.data.id,
-      username: userRes.data.username,
-      avatar: userRes.data.avatar
+      id: user.id,
+      username: user.username,
+      avatar: user.avatar,
     };
 
-    // ➜ Redirect to dashboard
-    res.redirect(process.env.FRONTEND_URL + "/dashboard.html");
+    /* SAVE TO users.json */
+    let users = [];
+    if (fs.existsSync(USERS_FILE)) {
+      users = JSON.parse(fs.readFileSync(USERS_FILE));
+    }
 
+    if (!users.find((u) => u.id === user.id)) {
+      users.push(req.session.user);
+      fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+    }
+
+    res.redirect("/dashboard.html");
   } catch (err) {
-    console.error("DISCORD TOKEN ERROR:");
-    console.error(err.response?.data || err.message);
-    res.send("Discord OAuth failed");
+    console.log(err);
+    res.redirect("/");
   }
+});
+
+/* LOGOUT */
+router.get("/logout", (req, res) => {
+  req.session.destroy(() => {
+    res.clearCookie("eco.sid");
+    res.redirect("/");
+  });
 });
 
 module.exports = router;
